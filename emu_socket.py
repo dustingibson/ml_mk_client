@@ -5,10 +5,12 @@ class EmulatorSocketClient:
     def __init__(self, port):
         self.port = port
         self.host = "127.0.0.1"
-        self.payload_queue = []
+        self.payload_queue = [[],[]]
+        self.frame_queue = [[],[]]
         self.player1_controls = self.player_1_controls()
         self.player2_controls = self.player_2_controls()
         self.data = ""
+        self.rec_lock = False
 
     def run_socket(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -23,13 +25,26 @@ class EmulatorSocketClient:
 
     
     def get_payload(self):
-        if len(self.payload_queue) <= 0:
-            return bytearray([1, 2])
-        else:
-            print(self.payload_queue[0])
-            return self.payload_queue.pop()
+        out_bytes = bytearray()
+        out_bytes.append(1)
+        if len(self.frame_queue[0]) > 0 and not self.rec_lock:
+            self.frame_queue[0][0] = self.frame_queue[0][0] - 1
+            if self.frame_queue[0][0] <= 0:
+                self.frame_queue[0].pop(0)
+                out_bytes.extend(self.payload_queue[0].pop(0))
+
+        out_bytes.append(2)
+        if len(self.frame_queue[1]) > 0 and not self.rec_lock:
+            self.frame_queue[1][0] = self.frame_queue[1][0] - 1
+            if self.frame_queue[1][0] > 0:
+                self.frame_queue[1].pop(0)
+                out_bytes.extend(self.payload_queue[1].pop(0))
+        return out_bytes
     
     def set_payload(self, control_str_p1, control_str_p2):
+        self.rec_lock = True
+        self.payload_queue = [[],[]]
+        self.frame_queue = [[0],[0]]
         # Specs:
         # 0x01<controls p1 bytes...>0x02<controls p2 bytes...>0x00
         # Controls Bytes: for x frames [0x01]
@@ -37,23 +52,24 @@ class EmulatorSocketClient:
         all_chars_p2 = control_str_p2.strip().split(',')
         for i in range(0, max(len(all_chars_p1), len(all_chars_p2))):
             if i >= len(all_chars_p1):
-                ctrl_array = self.set_queue_control(None, all_chars_p2[i])
-                self.payload_queue.append(bytearray(ctrl_array))
+                self.set_queue_control(None, all_chars_p2[i])
             elif i >= len(all_chars_p2):
-                ctrl_array = self.set_queue_control(all_chars_p1[i], None)
-                self.payload_queue.append(bytearray(ctrl_array))
+                self.set_queue_control(all_chars_p1[i], None)
             else:
-                ctrl_array = self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
-                self.payload_queue.append(bytearray(ctrl_array))
+                self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
+        # We don't care about the last frame timings
+        self.frame_queue[0].pop()
+        self.frame_queue[1].pop()
+        self.rec_lock = False
 
     def set_queue_control(self, p1_chars, p2_chars):
         payload_bytes = []
-        payload_bytes.append(1)
+        #payload_bytes.append(1)
         if p1_chars is not None:
-            payload_bytes.extend(self.from_control_str(1, p1_chars))
-        payload_bytes.append(2)
+            self.payload_queue[0].append(bytearray(self.from_control_str(1, p1_chars)))
+        #payload_bytes.append(2)
         if p2_chars is not None:
-            payload_bytes.extend(self.from_control_str(2, p2_chars))
+            self.payload_queue[1].append(bytearray(self.from_control_str(2, p2_chars)))
         return payload_bytes
         
 
@@ -63,16 +79,22 @@ class EmulatorSocketClient:
         payload_bytes = []
         if control_str == '':
             return []
-        hold_controls = control_str.split('+')
+        hold_controls = control_str.split('|')[0].split('+')
         for control in hold_controls:
             res = self.from_control_char(player, control)
-            print(res)
-            print(res.to_bytes(byte_len, endian))
             if res is not None:
                 payload_bytes.extend(res.to_bytes(byte_len, endian))
-        # Number of Frames 
-        frames = 180
+        # Number of Frames----------------------- 
+        frames = 1
+        frame_info = control_str.split('|')
+        if len(frame_info) >= 2:
+            frames = int(frame_info[1])
+        if player == 1:
+            self.frame_queue[0].append(frames)
+        else:
+            self.frame_queue[1].append(frames)
         payload_bytes.extend(frames.to_bytes(2, endian))
+        #--------------------------------------------------
         return payload_bytes
     
     def player_1_controls(self) -> int:
