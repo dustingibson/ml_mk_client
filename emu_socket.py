@@ -3,18 +3,35 @@ import socket, threading
 
 class BaseActor:
 
-    def __init__(self, data):
+    def __init__(self):
         self.x = 0
         self.y = 0
         self.health = 0
         self.state = 0
         # 1 = left, 2 = right
         self.facing = 0
+        self.ctrl = {}
+
+    def get_controls(self):
+        pass
+
+    def set_dir_controls(self):
+        # Position [10] is which way it is facing. If left (1), forward is right, back is left
+        if self.facing == 1:
+            self.ctrl['fw'] = self.ctrl['right']
+            self.ctrl['bk'] = self.ctrl['left']
+        else:
+            self.ctrl['fw'] = self.ctrl['left']
+            self.ctrl['bk'] = self.ctrl['right']  
 
 class ActorP1(BaseActor):
 
-    def __init__(self, data):
-        super()
+    def __init__(self):
+        super().__init__()
+        self.ctrl = {}
+        self.get_controls()
+
+    def set_data(self, data):
         p2_x = data[3]*255 + data[2]
         self.x = data[1]*255 + data[0]
         self.y = data[4]
@@ -22,12 +39,40 @@ class ActorP1(BaseActor):
         self.health = data[8]
         # If less than p2 x face left otherwise right
         self.facing = 1 if  self.x < p2_x else 2
+        self.set_dir_controls()
+
+    def get_controls(self):
+        self.ctrl['x'] = 268435578
+        self.ctrl['y'] = 268435576
+        self.ctrl['a'] = 268435553
+        self.ctrl['b'] = 268435571
+        self.ctrl['l'] = 268435569
+        self.ctrl['r'] = 268435575
+        self.ctrl['start'] = 268500749
+        self.ctrl['select'] = 268500962
+        self.ctrl['up'] = 268500818
+        self.ctrl['down'] = 268500820
+        self.ctrl['left'] = 268500817
+        self.ctrl['right'] = 268500819
+        self.ctrl['write'] = 1234
+
+        self.ctrl['lp'] = self.ctrl['b']
+        self.ctrl['hp'] = self.ctrl['y']
+        self.ctrl['lk'] = self.ctrl['a']
+        self.ctrl['hk'] = self.ctrl['x']
+        self.ctrl['bl'] = self.ctrl['l']
+        self.ctrl['dn'] = self.ctrl['down']
+        self.set_dir_controls()
 
 
 class ActorP2(BaseActor):
 
-    def __init__(self, data):
-        super()
+    def __init__(self):
+        super().__init__()
+        self.ctrl = {}
+        self.get_controls()
+
+    def set_data(self, data):
         p1_x = data[1]*255 + data[0]
         self.x = data[3]*255 + data[2]
         self.y = data[4]
@@ -35,6 +80,30 @@ class ActorP2(BaseActor):
         self.health = data[8]
         # If less than p2 x face left otherwise right
         self.facing = 1 if  self.x < p1_x else 2
+        self.set_dir_controls()
+
+    def get_controls(self):
+        self.ctrl['x'] = 268435578
+        self.ctrl['y'] = 268435576
+        self.ctrl['a'] = 268435553
+        self.ctrl['b'] = 268435571
+        self.ctrl['l'] = 268435569
+        self.ctrl['r'] = 268435575
+        self.ctrl['start'] = 268500749
+        self.ctrl['select'] = 268500962
+        self.ctrl['up'] = 268500818
+        self.ctrl['down'] = 268500820
+        self.ctrl['left'] = 268500817
+        self.ctrl['right'] = 268500819
+        self.ctrl['write'] = 1234
+
+        self.ctrl['lp'] = self.ctrl['b']
+        self.ctrl['hp'] = self.ctrl['y']
+        self.ctrl['lk'] = self.ctrl['a']
+        self.ctrl['hk'] = self.ctrl['x']
+        self.ctrl['bl'] = self.ctrl['l']
+        self.ctrl['dn'] = self.ctrl['down']
+        self.set_dir_controls()
 
 class EmulatorSocketClient:
     
@@ -44,27 +113,26 @@ class EmulatorSocketClient:
         self.payload_queue = [[],[]]
         self.frame_queue = [[],[]]
         self.data = [0] * 1024
-        self.actor1 = ActorP1(self.data)
-        self.actor2 = ActorP2(self.data)
-        self.player1_controls = self.player_1_controls()
-        self.player2_controls = self.player_2_controls()
+        self.actor1 = ActorP1()
+        self.actor2 = ActorP2()
         self.rec_lock = False
+        self.flag_kill = False
 
+    def kill(self):
+        self.flag_kill = True
 
     def run_socket(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.host, self.port))
             s.sendall(self.get_payload())
-            while True:
+            while not self.flag_kill:
                 #print("Sending")
                 payload = self.get_payload()
                 s.sendall(payload)
                 self.data = s.recv(1024)
-                self.actor1 = ActorP1(self.data)
-                self.actor2 = ActorP2(self.data)
-                self.player1_controls = self.player_1_controls()
-                self.player2_controls = self.player_2_controls()
-
+                self.actor1.set_data(self.data)
+                self.actor2.set_data(self.data)
+        print("Socket killed")
     
     def get_payload(self):
         out_bytes = bytearray()
@@ -138,75 +206,8 @@ class EmulatorSocketClient:
     
     # TODO: Condensed these to actor objects
 
-    def player_1_controls(self) -> int:
-        ctrl = {}
-        ctrl['x'] = 268435578
-        ctrl['y'] = 268435576
-        ctrl['a'] = 268435553
-        ctrl['b'] = 268435571
-        ctrl['l'] = 268435569
-        ctrl['r'] = 268435575
-        ctrl['start'] = 268500749
-        ctrl['select'] = 268500962
-        ctrl['up'] = 268500818
-        ctrl['down'] = 268500820
-        ctrl['left'] = 268500817
-        ctrl['right'] = 268500819
-        ctrl['write'] = 1234
-
-        # Position [10] is which way it is facing. If left (1), forward is right, back is left
-        if self.actor1.facing == 1:
-            ctrl['fw'] = ctrl['right']
-            ctrl['bk'] = ctrl['left']
-        else:
-            ctrl['fw'] = ctrl['left']
-            ctrl['bk'] = ctrl['right']  
-
-        ctrl['lp'] = ctrl['b']
-        ctrl['hp'] = ctrl['y']
-        ctrl['lk'] = ctrl['a']
-        ctrl['hk'] = ctrl['x']
-        ctrl['bl'] = ctrl['l']
-        ctrl['dn'] = ctrl['down']
-
-        return ctrl
-
-    def player_2_controls(self) -> int:
-        ctrl = {}
-        ctrl['x'] = 268435578
-        ctrl['y'] = 268435576
-        ctrl['a'] = 268435553
-        ctrl['b'] = 268435571
-        ctrl['l'] = 268435569
-        ctrl['r'] = 268435575
-        ctrl['start'] = 268500749
-        ctrl['select'] = 268500962
-        ctrl['up'] = 268500818
-        ctrl['down'] = 268500820
-        ctrl['left'] = 268500817
-        ctrl['right'] = 268500819
-        ctrl['write'] = 1234
-
-        # Position [11] is which way it is facing. If left (1), forward is right, back is left
-        if self.actor2.facing == 1:
-            ctrl['fw'] = ctrl['right']
-            ctrl['bk'] = ctrl['left']
-        else:
-            ctrl['fw'] = ctrl['left']
-            ctrl['bk'] = ctrl['right']  
-
-        ctrl['lp'] = ctrl['b']
-        ctrl['hp'] = ctrl['y']
-        ctrl['lk'] = ctrl['a']
-        ctrl['hk'] = ctrl['x']
-        ctrl['bl'] = ctrl['l']
-        ctrl['dn'] = ctrl['down']
-
-
-        return ctrl
-
     def from_control_char(self, player, control_char):
         if player == 1:
-            return self.player1_controls[control_char.strip().lower()]
+            return self.actor1.ctrl[control_char.strip().lower()]
         else:
-            return self.player2_controls[control_char.strip().lower()]
+            return self.actor2.ctrl[control_char.strip().lower()]

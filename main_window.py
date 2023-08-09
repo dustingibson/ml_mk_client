@@ -22,6 +22,9 @@ class MainWindow():
         self.set_entries()
         self.set_labels()
         self.set_text_outs()
+
+        #self.root.protocol("WM_DELETE_WINDOW", self.handle_close)
+
         self.root.mainloop()
 
     def set_window_props(self):
@@ -93,7 +96,7 @@ class MainWindow():
         return '\n'.join(out_strs)
 
     def print_outputs(self):
-        while True:
+        while not self.socket_client.flag_kill:
             time.sleep(1/60)
             self.p1_out_text.delete("1.0", tk.END)
             self.p2_out_text.delete("1.0", tk.END)
@@ -102,3 +105,6 @@ class MainWindow():
 
 
     # TODO: Safely close socket when window closes
+    def handle_close(self):
+        self.socket_client.kill()
+        #self.socket_thread.join()
