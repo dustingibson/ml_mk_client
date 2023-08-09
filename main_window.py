@@ -76,18 +76,20 @@ class MainWindow():
 
     def p1_out(self):
         out_strs = []
-        out_strs.append('X:\t' + str((int(self.socket_client.data[0])))  )
-        out_strs.append('Y:\t' + str((int(self.socket_client.data[2])))  )
-        out_strs.append('State:\t' + str((int(self.socket_client.data[4])))  )
-        out_strs.append('Health:\t' + str((int(self.socket_client.data[6])))  )
+        out_strs.append('X:\t' + str(self.socket_client.actor1.x)  )
+        out_strs.append('Y:\t' + str(self.socket_client.actor1.y)  )
+        out_strs.append('State:\t' + str(self.socket_client.actor1.state)  )
+        out_strs.append('Health:\t' + str(self.socket_client.actor1.health)  )
+        out_strs.append('F:\t' + str((self.socket_client.actor1.facing)  ))
         return '\n'.join(out_strs)
 
     def p2_out(self):
         out_strs = []
-        out_strs.append('X:\t' + str((int(self.socket_client.data[1])))  )
-        out_strs.append('Y:\t' + str((int(self.socket_client.data[3])))  )
-        out_strs.append('State:\t' + str((int(self.socket_client.data[5])))  )
-        out_strs.append('Health:\t' + str((int(self.socket_client.data[7])))  )
+        out_strs.append('X:\t' + str(self.socket_client.actor2.x)  )
+        out_strs.append('Y:\t' + str(self.socket_client.actor2.y)  )
+        out_strs.append('State:\t' + str(self.socket_client.actor2.state)  )
+        out_strs.append('Health:\t' + str(self.socket_client.actor2.health)  )
+        out_strs.append('F:\t' + str((self.socket_client.actor2.facing)  ))
         return '\n'.join(out_strs)
 
     def print_outputs(self):
@@ -97,3 +99,6 @@ class MainWindow():
             self.p2_out_text.delete("1.0", tk.END)
             self.p1_out_text.insert(tk.END, self.p1_out())
             self.p2_out_text.insert(tk.END, self.p2_out())
+
+
+    # TODO: Safely close socket when window closes

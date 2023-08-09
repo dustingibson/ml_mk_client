@@ -1,5 +1,41 @@
 import socket, threading
 
+
+class BaseActor:
+
+    def __init__(self, data):
+        self.x = 0
+        self.y = 0
+        self.health = 0
+        self.state = 0
+        # 1 = left, 2 = right
+        self.facing = 0
+
+class ActorP1(BaseActor):
+
+    def __init__(self, data):
+        super()
+        p2_x = data[3]*255 + data[2]
+        self.x = data[1]*255 + data[0]
+        self.y = data[4]
+        self.state = data[6]
+        self.health = data[8]
+        # If less than p2 x face left otherwise right
+        self.facing = 1 if  self.x < p2_x else 2
+
+
+class ActorP2(BaseActor):
+
+    def __init__(self, data):
+        super()
+        p1_x = data[1]*255 + data[0]
+        self.x = data[3]*255 + data[2]
+        self.y = data[4]
+        self.state = data[6]
+        self.health = data[8]
+        # If less than p2 x face left otherwise right
+        self.facing = 1 if  self.x < p1_x else 2
+
 class EmulatorSocketClient:
     
     def __init__(self, port):
@@ -7,10 +43,13 @@ class EmulatorSocketClient:
         self.host = "127.0.0.1"
         self.payload_queue = [[],[]]
         self.frame_queue = [[],[]]
+        self.data = [0] * 1024
+        self.actor1 = ActorP1(self.data)
+        self.actor2 = ActorP2(self.data)
         self.player1_controls = self.player_1_controls()
         self.player2_controls = self.player_2_controls()
-        self.data = ""
         self.rec_lock = False
+
 
     def run_socket(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -21,7 +60,10 @@ class EmulatorSocketClient:
                 payload = self.get_payload()
                 s.sendall(payload)
                 self.data = s.recv(1024)
-                #print(int(self.data[0]))
+                self.actor1 = ActorP1(self.data)
+                self.actor2 = ActorP2(self.data)
+                self.player1_controls = self.player_1_controls()
+                self.player2_controls = self.player_2_controls()
 
     
     def get_payload(self):
@@ -44,7 +86,7 @@ class EmulatorSocketClient:
     def set_payload(self, control_str_p1, control_str_p2):
         self.rec_lock = True
         self.payload_queue = [[],[]]
-        self.frame_queue = [[0],[0]]
+        self.frame_queue = [[],[]]
         # Specs:
         # 0x01<controls p1 bytes...>0x02<controls p2 bytes...>0x00
         # Controls Bytes: for x frames [0x01]
@@ -57,9 +99,6 @@ class EmulatorSocketClient:
                 self.set_queue_control(all_chars_p1[i], None)
             else:
                 self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
-        # We don't care about the last frame timings
-        self.frame_queue[0].pop()
-        self.frame_queue[1].pop()
         self.rec_lock = False
 
     def set_queue_control(self, p1_chars, p2_chars):
@@ -97,6 +136,8 @@ class EmulatorSocketClient:
         #--------------------------------------------------
         return payload_bytes
     
+    # TODO: Condensed these to actor objects
+
     def player_1_controls(self) -> int:
         ctrl = {}
         ctrl['x'] = 268435578
@@ -111,6 +152,23 @@ class EmulatorSocketClient:
         ctrl['down'] = 268500820
         ctrl['left'] = 268500817
         ctrl['right'] = 268500819
+        ctrl['write'] = 1234
+
+        # Position [10] is which way it is facing. If left (1), forward is right, back is left
+        if self.actor1.facing == 1:
+            ctrl['fw'] = ctrl['right']
+            ctrl['bk'] = ctrl['left']
+        else:
+            ctrl['fw'] = ctrl['left']
+            ctrl['bk'] = ctrl['right']  
+
+        ctrl['lp'] = ctrl['b']
+        ctrl['hp'] = ctrl['y']
+        ctrl['lk'] = ctrl['a']
+        ctrl['hk'] = ctrl['x']
+        ctrl['bl'] = ctrl['l']
+        ctrl['dn'] = ctrl['down']
+
         return ctrl
 
     def player_2_controls(self) -> int:
@@ -127,6 +185,24 @@ class EmulatorSocketClient:
         ctrl['down'] = 268500820
         ctrl['left'] = 268500817
         ctrl['right'] = 268500819
+        ctrl['write'] = 1234
+
+        # Position [11] is which way it is facing. If left (1), forward is right, back is left
+        if self.actor2.facing == 1:
+            ctrl['fw'] = ctrl['right']
+            ctrl['bk'] = ctrl['left']
+        else:
+            ctrl['fw'] = ctrl['left']
+            ctrl['bk'] = ctrl['right']  
+
+        ctrl['lp'] = ctrl['b']
+        ctrl['hp'] = ctrl['y']
+        ctrl['lk'] = ctrl['a']
+        ctrl['hk'] = ctrl['x']
+        ctrl['bl'] = ctrl['l']
+        ctrl['dn'] = ctrl['down']
+
+
         return ctrl
 
     def from_control_char(self, player, control_char):
