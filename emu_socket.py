@@ -56,6 +56,9 @@ class ActorP1(BaseActor):
         self.ctrl['right'] = 268500819
         self.ctrl['write'] = 1234
 
+        self.ctrl['w'] = 4321
+
+
         self.ctrl['lp'] = self.ctrl['b']
         self.ctrl['hp'] = self.ctrl['y']
         self.ctrl['lk'] = self.ctrl['a']
@@ -96,6 +99,8 @@ class ActorP2(BaseActor):
         self.ctrl['left'] = 268500817
         self.ctrl['right'] = 268500819
         self.ctrl['write'] = 1234
+
+        self.ctrl['w'] = 4321
 
         self.ctrl['lp'] = self.ctrl['b']
         self.ctrl['hp'] = self.ctrl['y']
@@ -154,7 +159,7 @@ class EmulatorSocketClient:
     def set_payload(self, control_str_p1, control_str_p2):
         self.rec_lock = True
         self.payload_queue = [[],[]]
-        self.frame_queue = [[],[]]
+        self.frame_queue = [[0],[0]]
         # Specs:
         # 0x01<controls p1 bytes...>0x02<controls p2 bytes...>0x00
         # Controls Bytes: for x frames [0x01]
@@ -168,6 +173,8 @@ class EmulatorSocketClient:
             else:
                 self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
         self.rec_lock = False
+        self.frame_queue[0].pop()
+        self.frame_queue[1].pop()
 
     def set_queue_control(self, p1_chars, p2_chars):
         payload_bytes = []
