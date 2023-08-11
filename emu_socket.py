@@ -56,6 +56,10 @@ class ActorP1(BaseActor):
         self.ctrl['right'] = 268500819
         self.ctrl['write'] = 1234
 
+        # Cyrax Has to be Special
+        self.ctrl['shlk1'] = 444
+        self.ctrl['ehlk1'] = 445
+
         self.ctrl['w'] = 4321
 
 
@@ -100,6 +104,10 @@ class ActorP2(BaseActor):
         self.ctrl['right'] = 268500819
         self.ctrl['write'] = 1234
 
+        # Cyrax Has to be Special
+        self.ctrl['cyx1'] = 446
+        self.ctrl['cyx2'] = 557
+
         self.ctrl['w'] = 4321
 
         self.ctrl['lp'] = self.ctrl['b']
@@ -133,7 +141,12 @@ class EmulatorSocketClient:
             while not self.flag_kill:
                 #print("Sending")
                 payload = self.get_payload()
-                s.sendall(payload)
+                if self.flag_kill:
+                    print("Killing Socket")
+                    s.sendall(b'404')
+                    return
+                else:
+                    s.sendall(payload)
                 self.data = s.recv(1024)
                 self.actor1.set_data(self.data)
                 self.actor2.set_data(self.data)

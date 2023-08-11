@@ -46,8 +46,8 @@ class MainWindow():
         self.set_player_button.place(x=10, y=170)
 
     def set_entries(self):
-        self.player1_entry = Entry(self.root, textvariable=self.player1_str)
-        self.player2_entry = Entry(self.root, textvariable=self.player2_str)
+        self.player1_entry = Entry(self.root, textvariable=self.player1_str, width=40)
+        self.player2_entry = Entry(self.root, textvariable=self.player2_str, width=40)
         self.player1_entry.pack()
         self.player2_entry.pack()
         self.player1_entry.place(x=130, y=50)
@@ -97,14 +97,17 @@ class MainWindow():
 
     def print_outputs(self):
         while not self.socket_client.flag_kill:
-            time.sleep(1/60)
-            self.p1_out_text.delete("1.0", tk.END)
-            self.p2_out_text.delete("1.0", tk.END)
-            self.p1_out_text.insert(tk.END, self.p1_out())
-            self.p2_out_text.insert(tk.END, self.p2_out())
+            try:
+                time.sleep(1/60)
+                self.p1_out_text.delete("1.0", tk.END)
+                self.p2_out_text.delete("1.0", tk.END)
+                self.p1_out_text.insert(tk.END, self.p1_out())
+                self.p2_out_text.insert(tk.END, self.p2_out())
+            except:
+                return
 
 
     # TODO: Safely close socket when window closes
     def handle_close(self):
         self.socket_client.kill()
-        #self.socket_thread.join()
+        self.socket_thread.join()

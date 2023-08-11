@@ -5,4 +5,3 @@ from main_window import MainWindow
 if __name__ == '__main__':
     emu_socket = EmulatorSocketClient(54000)
     main_window = MainWindow(emu_socket)
-    emu_socket.run_socket()

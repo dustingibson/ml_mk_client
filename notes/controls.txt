@@ -1,0 +1,116 @@
+Controls
+
+[Cyrax]
+Teleport: fw|3,down,l
+Web: bk|3,bk|6,lk
+Close Grenade: shlk1,w|20,bk,w|10,bk,w|2,bk,w|2,hk,w|30,ehlk1
+Far Grenade: shlk1,w|20,fw,w|10,fw,w|2,hk,w|30,ehlk1
+
+[Ermac]
+Fireball: down,bk,lp
+Teleport: down|3,bk|3,hp|3
+Mental Slam: bk|3,down|3,bk|3,hk|3
+
+[Jade]
+Razor Wing (mid): bk,fw,lp
+Razor Wing (up): bk,fw,hp
+Razor Wing (down): bk,fw,lk
+Glow Kick: down,fw,lk
+Shield: bk,fw,hk
+
+[Jax]
+Fireball: bk,fw+hp
+Double Fireball: fw,w|2,fw,w|2,bk,w|2,bk,w|2,hp
+Ground Pound: lk|90
+Rushing Punch: fw,w|2,fw,w|2,hk
+
+[Kabal]
+Fireball: bk,w|2,bk+hp
+Cocoon: bk,w|3,fw,lk
+Blade: bk,w|2,bk,w|2,bk,w|2,r
+
+[Kano]
+Uppercut: down,fw,hp
+Knife Throw: down,bk,hp
+Cannonball: lk|90
+Upper Ball: fw,w|2,down,w|2,fw,w|2,hk
+Shake: bk,down,fw,lp
+
+[Kitana]
+Wave: bk,w|2,bk,w|2,bk,w|2,hp
+Fan Throw: fw,w|2,fw,w|2,hp+lp
+Fan Slice: bk+hp
+Leg Throw: down+bl+lp
+Square Punch: fw,down,bk,hp
+
+[Liu Kang]
+Flying Kick: fw,w|2,fw,w|2,hk
+Fire (High): fw,w|2,fw+hp
+Fire (Low): fw,w|2,fw+lp
+Bicycle Kick: lk|140
+
+[Kung Lao]
+Hat Throw: bk,fw+lp
+Teleport: down,up
+Spin: fw,w|2,down,w|2,fw+r,w|2,r,r,r,r
+
+[Mileena]
+Sai Shoot: hp|90
+Teleport Kick: fw,w|2,fw,w|2,lk
+Roll Attack: fw,w|2,fw,w|2,lk
+
+[Nightwolf]
+Arrow: down,bk+lp
+Hatchet Uppercut: down,fw+hp
+Shadow Shoulder: fw,w|2,fw,w|2,lk
+Reflect: bk,w|2,bk,w|2,bk,w|2,hk
+
+[Reptile]
+Acid Spit: fw,w|2,fw,w|2,hp
+Slow Ball: bk,w|2,bk,w|2,hp+lp
+Fast Ball: fw,w|2,fw|2,hp+lp
+Dash: bk,fw,lk
+Slide: bk+lp+bl+lk
+
+[Scorpion]
+Spear: bk,w|2,bk,w|2,lp
+Teleport: down|3,bk,hp
+
+[Sketor]
+Homing Missile: fw,down,bk+hp
+Straight Missile: fw,w|2,fw+lp
+Teleport Uppercut: fw,w|2,fw,w|2,lk
+
+[Sindel]
+Fireball: fw,w|2,fw+lp
+Scream: fw,w|2,fw,w|2,fw+hp
+
+[Smoke]
+Harpoon: bk,w|2,bk,w|2,lp
+Uppercut: fw,w|2,fw,w|2,lk
+
+[Sonya]
+Ring Toss: down,fw+lp
+Leg Grab: down+lp+bl
+Square Wave: fw,bk+hp
+Bicycle Kick: bk,w|2,bk,w|2,down,w|2,hk
+
+[Syryker]
+Gun: bk,fw,hp
+High Gernade: down,bk+hp
+Low Gernade: down,bk+lp
+Baton Throw: fw,w|2,fw,w|2,hk
+Baton Trip: fw,w|2,bk,w|2,lp
+
+[Bro-Zero]
+Freeze: down,fw+lp
+Ice Shower: down,fw+hp
+Clone: down,bk+lp
+Slide: bk+bl+lk+lp
+
+[OG-Zero]
+Freeze: down,fw,lp
+Ground Freeze: down,w|2,bk,w|2,lk
+Slide: bk+bl+lk+lp
+
+
