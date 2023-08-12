@@ -133,9 +133,12 @@ class EmulatorSocketClient:
         self.rec_lock = False
         self.flag_kill = False
 
+        self.socket: socket.socket = None
+
     def kill(self):
         self.flag_kill = True
 
+    # Only useful for event based system like windows
     def run_socket(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -172,6 +175,31 @@ class EmulatorSocketClient:
                 s.close()
                 return
         print("Socket killed")
+
+    def connect(self):
+        if self.socket is None:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((self.host, self.port))
+            self.socket.sendall(self.get_payload())
+
+    def disconnect(self):
+        self.socket.close()
+
+    def run_socket_frame(self):
+        try:
+            payload = self.get_payload()
+            self.socket.sendall(payload)
+            self.socket.settimeout(10)
+            self.socket.recv(1024)
+            if len(self.data) <= 1:
+                self.socket.close()
+                return False
+            self.actor1.set_data(self.data)
+            self.actor2.set_data(self.data)
+            return True
+        except:
+            self.socket.close()
+            return False
     
     def get_payload(self):
         out_bytes = bytearray()
@@ -208,14 +236,6 @@ class EmulatorSocketClient:
                 self.set_queue_control(all_chars_p1.pop(0), None)
             elif len(all_chars_p2) > 0:
                 self.set_queue_control(None, all_chars_p2.pop(0))
-
-        # for i in range(0, max(len(all_chars_p1), len(all_chars_p2))):
-        #     if len(all_chars_p1) <= i+1:
-        #         self.set_queue_control(None, all_chars_p2[i])
-        #     elif len(all_chars_p2) <= i+i:
-        #         self.set_queue_control(all_chars_p1[i], None)
-        #     elif len(all_chars_p1) < i+1 and len(all_chars_p2) < i+1:
-        #         self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
         self.rec_lock = False
         self.frame_queue[0].pop()
         self.frame_queue[1].pop()
