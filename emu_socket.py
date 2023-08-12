@@ -1,4 +1,4 @@
-import socket, threading
+import socket, threading, select
 
 
 class BaseActor:
@@ -69,6 +69,7 @@ class ActorP1(BaseActor):
         self.ctrl['hk'] = self.ctrl['x']
         self.ctrl['bl'] = self.ctrl['l']
         self.ctrl['dn'] = self.ctrl['down']
+
         self.set_dir_controls()
 
 
@@ -116,6 +117,7 @@ class ActorP2(BaseActor):
         self.ctrl['hk'] = self.ctrl['x']
         self.ctrl['bl'] = self.ctrl['l']
         self.ctrl['dn'] = self.ctrl['down']
+
         self.set_dir_controls()
 
 class EmulatorSocketClient:
@@ -136,27 +138,39 @@ class EmulatorSocketClient:
 
     def run_socket(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.connect((self.host, self.port))
-            s.sendall(self.get_payload())
-            while not self.flag_kill:
-                try:
-                    #print("Sending")
-                    payload = self.get_payload()
-                    if self.flag_kill:
-                        print("Killing Socket")
-                        s.sendall(b'4')
-                        return
-                    else:
-                        s.sendall(payload)
-                    self.data = s.recv(1024)
-                    if len(self.data) <= 2:
+            try:
+                s.connect((self.host, self.port))
+                s.sendall(self.get_payload())
+                cnt = 0
+                while not self.flag_kill:
+                    try:
+                        #print("Sending")
+                        payload = self.get_payload()
+                        if self.flag_kill:
+                            print("Killing Socket")
+                            s.sendall(b'4')
+                            return
+                        else:
+                            s.settimeout(10)
+                            s.sendall(payload)
+                        # Interestingly if on another thread doesn't timeout
+                        s.settimeout(10)
+                        s.setblocking(0)
+                        ready = select.select([s], [], [], 10)
+                        if ready[0]:
+                            self.data = s.recv(1024)
+                        if len(self.data) <= 1:
+                            s.close()
+                            return
+                        cnt += 1
+                        self.actor1.set_data(self.data)
+                        self.actor2.set_data(self.data)
+                    except:
                         s.close()
                         return
-                    self.actor1.set_data(self.data)
-                    self.actor2.set_data(self.data)
-                except:
-                    s.close()
-                    return
+            except:
+                s.close()
+                return
         print("Socket killed")
     
     def get_payload(self):
