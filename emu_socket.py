@@ -90,23 +90,23 @@ class ActorP2(BaseActor):
         self.set_dir_controls()
 
     def get_controls(self):
-        self.ctrl['x'] = 268435578
-        self.ctrl['y'] = 268435576
-        self.ctrl['a'] = 268435553
-        self.ctrl['b'] = 268435571
-        self.ctrl['l'] = 268435569
-        self.ctrl['r'] = 268435575
-        self.ctrl['start'] = 268500749
-        self.ctrl['select'] = 268500962
-        self.ctrl['up'] = 268500818
-        self.ctrl['down'] = 268500820
-        self.ctrl['left'] = 268500817
-        self.ctrl['right'] = 268500819
+        self.ctrl['x'] = 268435566
+        self.ctrl['y'] = 268435565
+        self.ctrl['a'] = 268435560
+        self.ctrl['b'] = 268435562
+        self.ctrl['l'] = 268435577
+        self.ctrl['r'] = 268435573
+        self.ctrl['start'] = 268435548
+        self.ctrl['select'] = 268500822
+        self.ctrl['up'] = 268435568
+        self.ctrl['down'] = 268435515
+        self.ctrl['left'] = 268435564
+        self.ctrl['right'] = 268435495
         self.ctrl['write'] = 1234
 
         # Cyrax Has to be Special
-        self.ctrl['cyx1'] = 446
-        self.ctrl['cyx2'] = 557
+        self.ctrl['cyx1'] = 447
+        self.ctrl['cyx2'] = 448
 
         self.ctrl['w'] = 4321
 
@@ -139,17 +139,24 @@ class EmulatorSocketClient:
             s.connect((self.host, self.port))
             s.sendall(self.get_payload())
             while not self.flag_kill:
-                #print("Sending")
-                payload = self.get_payload()
-                if self.flag_kill:
-                    print("Killing Socket")
-                    s.sendall(b'404')
+                try:
+                    #print("Sending")
+                    payload = self.get_payload()
+                    if self.flag_kill:
+                        print("Killing Socket")
+                        s.sendall(b'4')
+                        return
+                    else:
+                        s.sendall(payload)
+                    self.data = s.recv(1024)
+                    if len(self.data) <= 2:
+                        s.close()
+                        return
+                    self.actor1.set_data(self.data)
+                    self.actor2.set_data(self.data)
+                except:
+                    s.close()
                     return
-                else:
-                    s.sendall(payload)
-                self.data = s.recv(1024)
-                self.actor1.set_data(self.data)
-                self.actor2.set_data(self.data)
         print("Socket killed")
     
     def get_payload(self):
@@ -164,9 +171,10 @@ class EmulatorSocketClient:
         out_bytes.append(2)
         if len(self.frame_queue[1]) > 0 and not self.rec_lock:
             self.frame_queue[1][0] = self.frame_queue[1][0] - 1
-            if self.frame_queue[1][0] > 0:
+            if self.frame_queue[1][0] <= 0:
                 self.frame_queue[1].pop(0)
                 out_bytes.extend(self.payload_queue[1].pop(0))
+        out_bytes.append(3)
         return out_bytes
     
     def set_payload(self, control_str_p1, control_str_p2):
@@ -176,15 +184,24 @@ class EmulatorSocketClient:
         # Specs:
         # 0x01<controls p1 bytes...>0x02<controls p2 bytes...>0x00
         # Controls Bytes: for x frames [0x01]
-        all_chars_p1 = control_str_p1.strip().split(',')
-        all_chars_p2 = control_str_p2.strip().split(',')
-        for i in range(0, max(len(all_chars_p1), len(all_chars_p2))):
-            if i >= len(all_chars_p1):
-                self.set_queue_control(None, all_chars_p2[i])
-            elif i >= len(all_chars_p2):
-                self.set_queue_control(all_chars_p1[i], None)
-            else:
-                self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
+        all_chars_p1 = [] if control_str_p1.strip() == '' else control_str_p1.strip().split(',')
+        all_chars_p2 = [] if control_str_p2.strip() == '' else control_str_p2.strip().split(',')
+
+        while len(all_chars_p1) > 0 or len(all_chars_p2) > 0:
+            if len(all_chars_p1) > 0 and len(all_chars_p2) > 0:
+                self.set_queue_control(all_chars_p1.pop(0), all_chars_p2.pop(0))
+            elif len(all_chars_p1) > 0:
+                self.set_queue_control(all_chars_p1.pop(0), None)
+            elif len(all_chars_p2) > 0:
+                self.set_queue_control(None, all_chars_p2.pop(0))
+
+        # for i in range(0, max(len(all_chars_p1), len(all_chars_p2))):
+        #     if len(all_chars_p1) <= i+1:
+        #         self.set_queue_control(None, all_chars_p2[i])
+        #     elif len(all_chars_p2) <= i+i:
+        #         self.set_queue_control(all_chars_p1[i], None)
+        #     elif len(all_chars_p1) < i+1 and len(all_chars_p2) < i+1:
+        #         self.set_queue_control(all_chars_p1[i], all_chars_p2[i])
         self.rec_lock = False
         self.frame_queue[0].pop()
         self.frame_queue[1].pop()

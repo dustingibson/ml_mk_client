@@ -65,6 +65,16 @@ Hatchet Uppercut: down,fw+hp
 Shadow Shoulder: fw,w|2,fw,w|2,lk
 Reflect: bk,w|2,bk,w|2,bk,w|2,hk
 
+[Noob]
+Teleport: down,up
+Fireball: down,fw,lp
+Toss: fw,w|2,fw,w|2,hp
+
+[Rain]
+Lightning: bk,w|2,bk,w|2,hp
+Orb: down,fw,hp,w|30,bk|30
+Roundhouse: bk+hk
+
 [Reptile]
 Acid Spit: fw,w|2,fw,w|2,hp
 Slow Ball: bk,w|2,bk,w|2,hp+lp
@@ -114,3 +124,9 @@ Ground Freeze: down,w|2,bk,w|2,lk
 Slide: bk+bl+lk+lp
 
 
+[GENERAL]
+Round House: bk+hk
+Sweep: bk+a
+Throw: fw+lp
+Uppercut: down|10,hp
+Run: fw+r|40

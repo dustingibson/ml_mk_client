@@ -23,7 +23,7 @@ class MainWindow():
         self.set_labels()
         self.set_text_outs()
 
-        #self.root.protocol("WM_DELETE_WINDOW", self.handle_close)
+        self.root.protocol("WM_DELETE_WINDOW", self.handle_close)
 
         self.root.mainloop()
 
@@ -37,7 +37,6 @@ class MainWindow():
         pass
 
     def set_controls(self):
-        print("Setting controls")
         self.socket_client.set_payload(self.player1_entry.get(), self.player2_entry.get())
 
     def set_buttons(self):
@@ -109,5 +108,6 @@ class MainWindow():
 
     # TODO: Safely close socket when window closes
     def handle_close(self):
-        self.socket_client.kill()
-        self.socket_thread.join()
+        pass
+        #self.socket_client.kill()
+        #self.socket_thread.join()
