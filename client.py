@@ -1,6 +1,7 @@
 import socket
 from emu_socket import EmulatorSocketClient
 from main_window import MainWindow
+import numpy as np
 
 if __name__ == '__main__':
     emu_socket = EmulatorSocketClient(54000)

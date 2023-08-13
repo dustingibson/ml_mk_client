@@ -6,7 +6,7 @@ class BaseActor:
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.health = 0
+        self.health = 166
         self.state = 0
         # 1 = left, 2 = right
         self.facing = 0
@@ -167,7 +167,6 @@ class EmulatorSocketClient:
                 cnt = 0
                 while not self.flag_kill:
                     try:
-                        #print("Sending")
                         payload = self.get_payload()
                         if self.flag_kill:
                             print("Killing Socket")
@@ -210,7 +209,7 @@ class EmulatorSocketClient:
             payload = self.get_payload()
             self.socket.sendall(payload)
             self.socket.settimeout(10)
-            self.socket.recv(1024)
+            self.data = self.socket.recv(1024)
             if len(self.data) <= 1:
                 self.socket.close()
                 return False
@@ -220,7 +219,8 @@ class EmulatorSocketClient:
         except:
             self.socket.close()
             return False
-    
+
+
     def get_payload(self):
         out_bytes = bytearray()
         out_bytes.append(1)
