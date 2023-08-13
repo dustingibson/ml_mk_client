@@ -55,6 +55,7 @@ class MonteEnvironment:
         self.monte_agent.run_frame()
         self.current_state = MonteState(self.monte_agent.recent_action, p1, p2)
         # Get the reward for the action of the previous state
+        print(self.reward())
         self.monte_agent.update_action(self.reward())
         self.prev_state = copy.copy(self.current_state)
         return self.monte_agent.recent_action
@@ -70,13 +71,23 @@ class MonteEnvironment:
     def reward(self):
         # Let for P2 the better
         if self.prev_state is not None:
-            return (self.prev_state.p2_health - self.current_state.p2_health) + (self.prev_state.p1_health - self.current_state.p1_health)
+            return (self.prev_state.p2_health - self.current_state.p2_health) + (self.current_state.p1_health - self.prev_state.p1_health)
         else:
             return 0
 
     def print_rewards(self):
         for cur_action in self.monte_agent.actions:
             print(f'{cur_action.name} {np.average(cur_action.rewards)}')
+
+
+class MonteEpisode:
+
+    def __init__(self):
+        self.prev_environement = MonteEnvironment()
+        self.monte_environment = MonteEnvironment()
+
+    
+    
 
 class MonteClient:
 

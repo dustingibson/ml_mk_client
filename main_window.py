@@ -12,7 +12,9 @@ class MainWindow():
         self.player1_str = ""
         self.player2_str = ""
         self.socket_client = socket_client
-        self.socket_client.run_snes()
+        #self.socket_client.run_snes('/home/dustin/sonya.sst')
+        self.socket_client.run_snes('/home/dustin/sonya_test.sst')
+        #self.socket_client.run_snes()
         self.socket_thread = Thread(target=self.socket_client.run_socket)
         self.socket_thread.start()
 
