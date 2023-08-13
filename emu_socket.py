@@ -1,5 +1,5 @@
-import socket, threading, select
-
+import socket, threading, select, subprocess, os, time
+from configparser import ConfigParser
 
 class BaseActor:
 
@@ -10,6 +10,7 @@ class BaseActor:
         self.state = 0
         # 1 = left, 2 = right
         self.facing = 0
+        self.wins = 0
         self.ctrl = {}
 
     def get_controls(self):
@@ -37,6 +38,7 @@ class ActorP1(BaseActor):
         self.y = data[4]
         self.state = data[6]
         self.health = data[8]
+        self.wins = data[10]
         # If less than p2 x face left otherwise right
         self.facing = 1 if  self.x < p2_x else 2
         self.set_dir_controls()
@@ -85,7 +87,8 @@ class ActorP2(BaseActor):
         self.x = data[3]*255 + data[2]
         self.y = data[4]
         self.state = data[6]
-        self.health = data[8]
+        self.health = data[9]
+        self.wins = data[11]
         # If less than p2 x face left otherwise right
         self.facing = 1 if  self.x < p1_x else 2
         self.set_dir_controls()
@@ -123,6 +126,11 @@ class ActorP2(BaseActor):
 class EmulatorSocketClient:
     
     def __init__(self, port):
+        self.config = ConfigParser()
+        self.snes_handle = None
+        self.config.read('./config/app.ini')
+        self.snes_location = self.config.get('SNES9X', 'AppLocation')
+        self.snes_rom_location = self.config.get('SNES9X', 'AppROMLocation')
         self.port = port
         self.host = "127.0.0.1"
         self.payload_queue = [[],[]]
@@ -137,6 +145,18 @@ class EmulatorSocketClient:
 
     def kill(self):
         self.flag_kill = True
+
+    def run_snes(self, save_state_path = None):
+        process_args = [self.snes_location, self.snes_rom_location]
+        if save_state_path is not None:
+            process_args.extend(['-savestate', save_state_path])
+        self.snes_handle = subprocess.Popen(process_args)
+        # Give some time for it to hit the socket
+        time.sleep(3)
+
+    def close_snes(self):
+        if self.snes_handle is not None:
+            self.snes_handle.kill()        
 
     # Only useful for event based system like windows
     def run_socket(self):

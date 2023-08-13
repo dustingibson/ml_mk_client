@@ -1,4 +1,3 @@
-import socket
 import tkinter as tk
 from tkinter import scrolledtext
 from tkinter.ttk import Label, Button, Entry
@@ -6,13 +5,14 @@ from emu_socket import EmulatorSocketClient
 from threading import Thread
 import time
 
+
 class MainWindow():
 
     def __init__(self, socket_client: EmulatorSocketClient):
         self.player1_str = ""
         self.player2_str = ""
         self.socket_client = socket_client
-
+        self.socket_client.run_snes()
         self.socket_thread = Thread(target=self.socket_client.run_socket)
         self.socket_thread.start()
 
@@ -90,6 +90,7 @@ class MainWindow():
         out_strs.append('State:\t' + str(self.socket_client.actor1.state)  )
         out_strs.append('Health:\t' + str(self.socket_client.actor1.health)  )
         out_strs.append('F:\t' + str((self.socket_client.actor1.facing)  ))
+        out_strs.append('W:\t' + str((self.socket_client.actor1.wins)))
         return '\n'.join(out_strs)
 
     def p2_out(self):
@@ -99,6 +100,7 @@ class MainWindow():
         out_strs.append('State:\t' + str(self.socket_client.actor2.state)  )
         out_strs.append('Health:\t' + str(self.socket_client.actor2.health)  )
         out_strs.append('F:\t' + str((self.socket_client.actor2.facing)  ))
+        out_strs.append('W:\t' + str((self.socket_client.actor2.wins)))
         return '\n'.join(out_strs)
 
     def print_outputs(self):
@@ -106,10 +108,6 @@ class MainWindow():
             try:
                 time.sleep(1/60)
                 self.root.event_generate("<<event_output>>", when="tail")
-                # self.p1_out_text.delete("1.0", tk.END)
-                # self.p2_out_text.delete("1.0", tk.END)
-                # self.p1_out_text.insert(tk.END, self.p1_out())
-                # self.p2_out_text.insert(tk.END, self.p2_out())
             except Exception as err:
                 print(err)
                 return
@@ -122,11 +120,12 @@ class MainWindow():
 
     # TODO: Safely close socket when window closes
     def handle_close(self):
+        self.socket_client.close_snes()
         self.socket_client.flag_kill = True
         self.close_socket()
         time.sleep(3)
         if self.socket_thread.is_alive():
-            self.socket_thread.join()
+            self.socket_thread.join(1)
         if self.output_thread.is_alive():
             self.output_thread.join(1)
         self.root.destroy()
