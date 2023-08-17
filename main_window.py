@@ -13,7 +13,7 @@ class MainWindow():
         self.player2_str = ""
         self.socket_client = socket_client
         #self.socket_client.run_snes('/home/dustin/sonya.sst')
-        self.socket_client.run_snes('/home/dustin/sonya_test.sst')
+        self.socket_client.run_snes('/home/dustin/sonya_p1p2.sst')
         #self.socket_client.run_snes()
         self.socket_thread = Thread(target=self.socket_client.run_socket)
         self.socket_thread.start()
@@ -87,12 +87,16 @@ class MainWindow():
 
     def p1_out(self):
         out_strs = []
+        frame_calc = self.socket_client.actor2.damage_frame - self.socket_client.actor1.action_frame
         out_strs.append('X:\t' + str(self.socket_client.actor1.x)  )
         out_strs.append('Y:\t' + str(self.socket_client.actor1.y)  )
         out_strs.append('State:\t' + str(self.socket_client.actor1.state)  )
         out_strs.append('Health:\t' + str(self.socket_client.actor1.health)  )
         out_strs.append('F:\t' + str((self.socket_client.actor1.facing)  ))
         out_strs.append('W:\t' + str((self.socket_client.actor1.wins)))
+        out_strs.append('D:\t' + str((self.socket_client.actor1.dist(self.socket_client.actor2.x, self.socket_client.actor2.y))))
+        out_strs.append("A Frame:\t" + str(self.socket_client.actor1.action_frame))
+        out_strs.append("Frame:\t" + str(frame_calc))
         return '\n'.join(out_strs)
 
     def p2_out(self):
@@ -103,6 +107,8 @@ class MainWindow():
         out_strs.append('Health:\t' + str(self.socket_client.actor2.health)  )
         out_strs.append('F:\t' + str((self.socket_client.actor2.facing)  ))
         out_strs.append('W:\t' + str((self.socket_client.actor2.wins)))
+        out_strs.append('D:\t' + str((self.socket_client.actor1.dist(self.socket_client.actor2.x, self.socket_client.actor2.y))))
+        out_strs.append("D Frame:\t" + str(self.socket_client.actor2.damage_frame))
         return '\n'.join(out_strs)
 
     def print_outputs(self):
@@ -122,10 +128,10 @@ class MainWindow():
 
     # TODO: Safely close socket when window closes
     def handle_close(self):
-        self.socket_client.close_snes()
-        self.socket_client.flag_kill = True
         self.close_socket()
         time.sleep(3)
+        self.socket_client.close_snes()
+        self.socket_client.flag_kill = True
         if self.socket_thread.is_alive():
             self.socket_thread.join(1)
         if self.output_thread.is_alive():

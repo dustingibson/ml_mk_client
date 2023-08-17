@@ -1,4 +1,4 @@
-import socket, threading, select, subprocess, os, time
+import socket, threading, select, subprocess, os, time, math
 from configparser import ConfigParser
 
 class BaseActor:
@@ -7,11 +7,17 @@ class BaseActor:
         self.x = 0
         self.y = 0
         self.health = 166
+        self.prev_health = 166
+        self.damage_frame = 0
+        self.action_frame = 0
         self.state = 0
         # 1 = left, 2 = right
         self.facing = 0
         self.wins = 0
         self.ctrl = {}
+
+    def dist(self, x2, y2):
+        return round(math.sqrt((x2-self.x)**2 + (y2-self.y)**2 ))
 
     def get_controls(self):
         pass
@@ -33,6 +39,7 @@ class ActorP1(BaseActor):
         self.get_controls()
 
     def set_data(self, data):
+        self.prev_health = self.health
         p2_x = data[3]*255 + data[2]
         self.x = data[1]*255 + data[0]
         self.y = data[4]
@@ -83,10 +90,11 @@ class ActorP2(BaseActor):
         self.get_controls()
 
     def set_data(self, data):
+        self.prev_health = self.health
         p1_x = data[1]*255 + data[0]
         self.x = data[3]*255 + data[2]
-        self.y = data[4]
-        self.state = data[6]
+        self.y = data[5]
+        self.state = data[7]
         self.health = data[9]
         self.wins = data[11]
         # If less than p2 x face left otherwise right
@@ -140,6 +148,7 @@ class EmulatorSocketClient:
         self.actor2 = ActorP2()
         self.rec_lock = False
         self.flag_kill = False
+        self.frame = 0
 
         self.socket: socket.socket = None
 
@@ -156,7 +165,14 @@ class EmulatorSocketClient:
 
     def close_snes(self):
         if self.snes_handle is not None:
-            self.snes_handle.kill()        
+            self.snes_handle.kill()  
+            self.snes_handle.wait()   
+
+    def set_frames(self):
+        if self.actor1.health != self.actor1.prev_health:
+            self.actor1.damage_frame = self.frame
+        if self.actor2.health != self.actor2.prev_health  :
+            self.actor2.damage_frame = self.frame
 
     # Only useful for event based system like windows
     def run_socket(self):
@@ -167,6 +183,8 @@ class EmulatorSocketClient:
                 cnt = 0
                 while not self.flag_kill:
                     try:
+                        self.frame += 1
+                        self.set_frames()
                         payload = self.get_payload()
                         if self.flag_kill:
                             print("Killing Socket")
@@ -264,9 +282,11 @@ class EmulatorSocketClient:
         payload_bytes = []
         #payload_bytes.append(1)
         if p1_chars is not None:
+            self.actor1.action_frame = self.frame
             self.payload_queue[0].append(bytearray(self.from_control_str(1, p1_chars)))
         #payload_bytes.append(2)
         if p2_chars is not None:
+            self.actor1.action_frame = self.frame
             self.payload_queue[1].append(bytearray(self.from_control_str(2, p2_chars)))
         return payload_bytes
         

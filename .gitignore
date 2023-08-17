@@ -162,3 +162,5 @@ cython_debug/
 
 # Real Config
 /config/app.ini
+
+/data/MK.sqlite3
