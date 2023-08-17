@@ -156,7 +156,7 @@ class EmulatorSocketClient:
         self.flag_kill = True
 
     def run_snes(self, save_state_path = None):
-        process_args = [self.snes_location, self.snes_rom_location]
+        process_args = [self.snes_location, self.snes_rom_location, '-mkport', str(self.port)]
         if save_state_path is not None:
             process_args.extend(['-savestate', save_state_path])
         self.snes_handle = subprocess.Popen(process_args)
