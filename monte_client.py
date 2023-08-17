@@ -1,7 +1,7 @@
 import numpy as np
 from emu_socket import EmulatorSocketClient, ActorP1, ActorP2
 from mk.characters import SonyaCharacter
-import copy, record_rewards
+import copy, record_rewards, sys
 
 class MonteAction:
 
@@ -99,8 +99,8 @@ class MonteEpisode:
 
 class MonteClient:
 
-    def __init__(self):
-        self.socket_client = EmulatorSocketClient(54000)
+    def __init__(self, port):
+        self.socket_client = EmulatorSocketClient(port)
         self.monte_environment = MonteEnvironment()
         self.frame = 0
         self.timesteps = 0
@@ -129,5 +129,5 @@ class MonteClient:
 
 
 if __name__ == '__main__':
-    monte_client = MonteClient()
+    monte_client = MonteClient(int(sys.argv[1]))
     monte_client.run()
