@@ -24,6 +24,7 @@ class MonteState:
         self.action_taken = action_taken
         self.p1_health = actor1.health
         self.p2_health = actor2.health
+        self.distance = actor1.dist(actor2.x, actor2.y)
 
 class MonteAgent:
 
@@ -79,6 +80,9 @@ class MonteEnvironment:
     def reward(self):
         # Let for P2 the better
         if self.prev_state is not None:
+            offense_score = (self.prev_state.p2_health - self.current_state.p2_health)
+            defense_score = (self.prev_state.p1_health - self.current_state.p1_health)
+            return offense_score + defense_score*-0.2
             return (self.prev_state.p2_health - self.current_state.p2_health) + (self.current_state.p1_health - self.prev_state.p1_health)
         else:
             return 0
@@ -99,18 +103,20 @@ class MonteEpisode:
 
 class MonteClient:
 
-    def __init__(self, port):
+    def __init__(self, port, save_file):
         self.socket_client = EmulatorSocketClient(port)
         self.monte_environment = MonteEnvironment()
         self.frame = 0
         self.timesteps = 0
         self.skip_timer = 8
+        self.save_file = save_file
     
     def should_terminate(self):
         return self.socket_client.actor1.health <= 0 or self.socket_client.actor2.health <= 0
 
     def run(self):
-        self.socket_client.run_snes('/home/dustin/sonya.sst')
+        #self.socket_client.run_snes('/home/dustin/sonya.sst')
+        self.socket_client.run_snes(self.save_file)
         self.socket_client.connect()
         while not self.should_terminate() and self.socket_client.run_socket_frame():
             if self.skip_timer <= 0:
@@ -123,11 +129,11 @@ class MonteClient:
                 self.timesteps += 1
             self.frame = self.frame + 1
             self.skip_timer -= 1
-        self.monte_environment.print_rewards()
+        #self.monte_environment.print_rewards()
         self.socket_client.disconnect()
         self.socket_client.close_snes()
 
 
 if __name__ == '__main__':
-    monte_client = MonteClient(int(sys.argv[1]))
+    monte_client = MonteClient(int(sys.argv[1]), sys.argv[2])
     monte_client.run()

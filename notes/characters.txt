@@ -17,9 +17,9 @@ Kitana	15
 Jade	16
 Milley	17
 Scorpion	18
-Reptile	19
+--Reptile	19
 Ermac	20
 OG Zero	21
-H-Smoke	22
+--H-Smoke	22
 Noob	23
 Rain	24
