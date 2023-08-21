@@ -33,7 +33,7 @@ def form_saves(base_fname, char_name):
 
 if __name__ == '__main__':
     #ports = [51000, 52000, 53000, 54000, 55000, 56000, 57000, 58000, 59000, 51200, 51300, 51400, 51500, 51600, 51700, 51800, 51900, 52100, 52300, 52400, 52500, 52600, 53100, 53200, 53300]
-    ports = list(range(52000, 52030))
+    ports = list(range(52000, 52050))
     fnames = form_saves("/home/dustin/mk_saves/ai", "sonya")
     threads = {}
     for port in ports:

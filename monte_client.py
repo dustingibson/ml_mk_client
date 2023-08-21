@@ -1,7 +1,7 @@
 import numpy as np
 from emu_socket import EmulatorSocketClient, ActorP1, ActorP2
 from mk.characters import SonyaCharacter
-import copy, record_rewards, sys
+import copy, record_rewards, sys, math
 
 class MonteAction:
 
@@ -58,14 +58,16 @@ class MonteEnvironment:
     def init_frame(self, p1, p2):
         self.prev_state = MonteState(None, p1, p2)
 
-    def run_frame(self, p1, p2):
+    def run_frame(self, p1, p2, save_file):
         # Run Frame
         self.monte_agent.run_frame()
         self.current_state = MonteState(self.monte_agent.recent_action, p1, p2)
         # Get the reward for the action of the previous state
+        damage_dished = (self.prev_state.p2_health - self.current_state.p2_health)
+        damage_taken = (self.prev_state.p1_health - self.current_state.p1_health)
         if self.monte_agent.prev_action is not None:
-            record_rewards.write_data('Sonya', self.monte_agent.prev_action.name, p1, p2, self.reward())
-        self.monte_agent.update_action(self.reward())
+            record_rewards.write_data('Sonya', self.monte_agent.prev_action.name, p1, p2, damage_dished, damage_taken, save_file, self.reward(damage_dished, damage_taken))
+        self.monte_agent.update_action(self.reward(damage_dished, damage_taken))
         self.prev_state = copy.copy(self.current_state)
         return self.monte_agent.recent_action
 
@@ -77,13 +79,12 @@ class MonteEnvironment:
     def end_frame(self):
         self.end_frame = self.current_state
 
-    def reward(self):
-        # Let for P2 the better
+    def reward(self, damage_dished, damage_taken):
         if self.prev_state is not None:
-            offense_score = (self.prev_state.p2_health - self.current_state.p2_health)
-            defense_score = (self.prev_state.p1_health - self.current_state.p1_health)
-            return offense_score + defense_score*-0.2
-            return (self.prev_state.p2_health - self.current_state.p2_health) + (self.current_state.p1_health - self.prev_state.p1_health)
+            # TODO: 0 is good should have positive effect!
+            offense_score = ( min(damage_dished, 55)/55 )
+            defense_score = ( min(55-damage_taken, 55)/55 )
+            return offense_score*0.8 + defense_score*0.2
         else:
             return 0
 
@@ -110,6 +111,7 @@ class MonteClient:
         self.timesteps = 0
         self.skip_timer = 8
         self.save_file = save_file
+        self.terminate_flag = False
     
     def should_terminate(self):
         return self.socket_client.actor1.health <= 0 or self.socket_client.actor2.health <= 0
@@ -118,12 +120,13 @@ class MonteClient:
         #self.socket_client.run_snes('/home/dustin/sonya.sst')
         self.socket_client.run_snes(self.save_file)
         self.socket_client.connect()
-        while not self.should_terminate() and self.socket_client.run_socket_frame():
+        while not self.terminate_flag and self.socket_client.run_socket_frame():
             if self.skip_timer <= 0:
                 if self.timesteps == 0:
                     self.monte_environment.init_frame(self.socket_client.actor1, self.socket_client.actor2)
                 else:
-                    cur_control = self.monte_environment.run_frame(self.socket_client.actor1, self.socket_client.actor2)
+                    self.terminate_flag = self.should_terminate()
+                    cur_control = self.monte_environment.run_frame(self.socket_client.actor1, self.socket_client.actor2, self.save_file)
                     self.skip_timer = cur_control.frame
                     self.socket_client.set_payload(cur_control.payload, '')
                 self.timesteps += 1
