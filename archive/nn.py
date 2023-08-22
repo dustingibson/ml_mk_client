@@ -62,7 +62,7 @@ class NNTrain:
                 self.back_propgation(res_matrix, input_prob, prop_results)            
 
     def get_training_set(self):
-        data = record_rewards.get_training(self.actor, 0.2)
+        data = record_rewards.get_training(self.actor, 0.18)
         return TrainingData(self.n_inputs, self.actions, data)
 
     def forward_propagation(self, inputs):
@@ -96,11 +96,11 @@ class NNTrain:
         for i in range(0, self.n_actions):
             cost_primes[i] = self.cost_prime(actual_matrix[i], prob_matrix[i])
         for i in range(0, self.n_actions):
-            self.weights[-1][i] = (1.0/self.n_actions) * self.weights[-1][i] - self.learn_rate * (cost_primes[i]*a_nodes[-1].dot_prod[i])
+            self.weights[-1][:i] = (1.0/self.n_actions) * self.weights[-1][:i] - self.learn_rate * (cost_primes[i]*a_nodes[-1].dot_prod[i])
 
         for i in reversed(range(self.n_hidden_layers)):
             for j in range(0, len(self.weights[:i])):
-                self.weights[i][j] = (1.0/self.n_actions) * self.weights[i][j] - (self.weights[i+1][j] * cost_primes[j] * self.relu_prime(a_nodes[i].squash[j]))
+                self.weights[i][:j] = (1.0/self.n_actions) * self.weights[i][:j] - (self.weights[i+1][Lj] * cost_primes[j] * self.relu_prime(a_nodes[i].squash[j]))
 
     def cost_prime(self, actual, prob):
         # Deterivative of (prob - actual)^2

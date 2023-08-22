@@ -164,3 +164,4 @@ cython_debug/
 /config/app.ini
 
 /data/MK.sqlite3
+/data/*.trn
