@@ -11,6 +11,7 @@ class BaseActor:
         self.damage_frame = 0
         self.action_frame = 0
         self.state = 0
+        self.prev_state = 0
         # 1 = left, 2 = right
         self.facing = 0
         self.wins = 0
@@ -40,6 +41,7 @@ class ActorP1(BaseActor):
 
     def set_data(self, data):
         self.prev_health = self.health
+        self.prev_state = self.state
         p2_x = data[3]*255 + data[2]
         self.x = data[1]*255 + data[0]
         self.y = data[4]
@@ -91,6 +93,7 @@ class ActorP2(BaseActor):
 
     def set_data(self, data):
         self.prev_health = self.health
+        self.prev_state = self.state
         p1_x = data[1]*255 + data[0]
         self.x = data[3]*255 + data[2]
         self.y = data[5]
@@ -102,18 +105,18 @@ class ActorP2(BaseActor):
         self.set_dir_controls()
 
     def get_controls(self):
-        self.ctrl['x'] = 268435566
-        self.ctrl['y'] = 268435565
-        self.ctrl['a'] = 268435560
-        self.ctrl['b'] = 268435562
-        self.ctrl['l'] = 268435577
-        self.ctrl['r'] = 268435573
+        self.ctrl['x'] = 268435500
+        self.ctrl['y'] = 268435502
+        self.ctrl['a'] = 268435566
+        self.ctrl['b'] = 268435565
+        self.ctrl['l'] = 268435547
+        self.ctrl['r'] = 268435549
         self.ctrl['start'] = 268435548
         self.ctrl['select'] = 268500822
-        self.ctrl['up'] = 268435568
-        self.ctrl['down'] = 268435515
-        self.ctrl['left'] = 268435564
-        self.ctrl['right'] = 268435495
+        self.ctrl['up'] = 268435568 //268435573
+        self.ctrl['down'] = 268435562
+        self.ctrl['left'] = 268435560
+        self.ctrl['right'] = 268435563
         self.ctrl['write'] = 1234
 
         # Cyrax Has to be Special

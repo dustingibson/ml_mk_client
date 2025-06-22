@@ -14,8 +14,9 @@ class MainWindow():
         self.socket_client = socket_client
         #self.socket_client.run_snes('/home/dustin/sonya.sst')
         #self.socket_client.run_snes('/home/dustin/sonya_test.sst')
-        self.socket_client.run_snes('/home/dustin/mk_saves/ai/sonya/_template.sst')
+        #self.socket_client.run_snes('/home/dustin/mk_saves/ai/sonya/_template.sst')
         #self.socket_client.run_snes('/home/dustin/mk_saves/ai/sonya/og_zero.sst')
+        self.socket_client.run_snes()
         self.socket_thread = Thread(target=self.socket_client.run_socket)
         self.socket_thread.start()
 

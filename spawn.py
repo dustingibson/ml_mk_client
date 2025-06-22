@@ -18,8 +18,9 @@ def call(port):
 
 
 def form_saves(base_fname, char_name):
-    opponents = ["bro_zero", "cyrax", "ermac", "jade", "jax", "kabal", "kano", "kitana", "kung_lao", "liu_kang", "mileena", "nightwolf", "noob", "og_zero","rain", "reptile", "scorpion", "sektor", "shang_tsung", "sindel", "smoke", "sonya", "stryker"]
-    assert(len(opponents) == 23)
+    #opponents = ["bro_zero", "cyrax", "ermac", "jade", "jax", "kabal", "kano", "kitana", "kung_lao", "liu_kang", "mileena", "nightwolf", "noob", "og_zero","rain", "reptile", "scorpion", "sektor", "shang_tsung", "sindel", "smoke", "sonya", "stryker"]
+    opponents = ["scorpion"]
+    #assert(len(opponents) == 23)
     fnames = []
     for opponent in opponents:
         fname = f"{base_fname}/{char_name}/{opponent}.sst"
@@ -27,13 +28,14 @@ def form_saves(base_fname, char_name):
             fnames.append(fname)
         else:
             print(f"{fname} does not exist")
-    assert(len(fnames) == 23)
+    assert(len(fnames) == len(opponents))
     return fnames
 
 
 if __name__ == '__main__':
     #ports = [51000, 52000, 53000, 54000, 55000, 56000, 57000, 58000, 59000, 51200, 51300, 51400, 51500, 51600, 51700, 51800, 51900, 52100, 52300, 52400, 52500, 52600, 53100, 53200, 53300]
-    ports = list(range(52000, 52050))
+    ports = list(range(52000, 52040))
+    #fnames = form_saves("/home/dustin/mk_saves/ai", "sonya")
     fnames = form_saves("/home/dustin/mk_saves/ai", "sonya")
     threads = {}
     for port in ports:

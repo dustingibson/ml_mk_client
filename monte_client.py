@@ -1,7 +1,7 @@
 import numpy as np
 from emu_socket import EmulatorSocketClient, ActorP1, ActorP2
 from mk.characters import SonyaCharacter
-import copy, record_rewards, sys, math
+import copy, record_rewards, sys, math, uuid
 
 class MonteAction:
 
@@ -54,6 +54,8 @@ class MonteEnvironment:
         self.prev_action = None
         self.cur_state = None
         self.monte_agent = MonteAgent()
+        self.monte_agent_p2 = MonteAgent()
+        self.match_id = str(uuid.uuid4())
 
     def init_frame(self, p1, p2):
         self.prev_state = MonteState(None, p1, p2)
@@ -61,16 +63,20 @@ class MonteEnvironment:
     def run_frame(self, p1, p2, save_file):
         # Run Frame
         self.monte_agent.run_frame()
+        self.monte_agent_p2.run_frame()
         self.current_state = MonteState(self.monte_agent.recent_action, p1, p2)
         # Get the reward for the action of the previous state
         damage_dished = (self.prev_state.p2_health - self.current_state.p2_health)
         damage_taken = (self.prev_state.p1_health - self.current_state.p1_health)
         if self.monte_agent.prev_action is not None:
-            record_rewards.write_data('Sonya', self.monte_agent.prev_action.name, p1, p2, damage_dished, damage_taken, save_file, self.reward(damage_dished, damage_taken))
+            record_rewards.write_data('Sonya', self.monte_agent.prev_action.name, p1, p2, damage_dished, damage_taken, save_file, self.reward(damage_dished, damage_taken), self.match_id)
         self.monte_agent.update_action(self.reward(damage_dished, damage_taken))
         self.prev_state = copy.copy(self.current_state)
-        return self.monte_agent.recent_action
+        return [self.monte_agent.recent_action, self.monte_agent_p2.recent_action]
 
+
+    def update_victory(self, did_win: bool):
+        record_rewards.update_results(self.match_id, did_win)
 
     def start_frame(self, p1, p2):
         self.current_state = MonteAgent(p1, p2)
@@ -99,22 +105,24 @@ class MonteEpisode:
         self.prev_environement = MonteEnvironment()
         self.monte_environment = MonteEnvironment()
 
-    
-    
 
 class MonteClient:
 
-    def __init__(self, port, save_file):
+    def __init__(self, port, save_file, sim_p2=True):
         self.socket_client = EmulatorSocketClient(port)
         self.monte_environment = MonteEnvironment()
         self.frame = 0
         self.timesteps = 0
         self.skip_timer = 8
         self.save_file = save_file
+        self.sim_p2 = sim_p2
         self.terminate_flag = False
     
     def should_terminate(self):
-        return self.socket_client.actor1.health <= 0 or self.socket_client.actor2.health <= 0
+        res = self.socket_client.actor1.health <= 0 or self.socket_client.actor2.health <= 0
+        if res:
+            self.monte_environment.update_victory(self.socket_client.actor2.health <= 0)
+        return res
 
     def run(self):
         #self.socket_client.run_snes('/home/dustin/sonya.sst')
@@ -127,8 +135,8 @@ class MonteClient:
                 else:
                     self.terminate_flag = self.should_terminate()
                     cur_control = self.monte_environment.run_frame(self.socket_client.actor1, self.socket_client.actor2, self.save_file)
-                    self.skip_timer = cur_control.frame
-                    self.socket_client.set_payload(cur_control.payload, '')
+                    self.skip_timer = cur_control[0].frame
+                    self.socket_client.set_payload(cur_control[0].payload, cur_control[1].payload )
                 self.timesteps += 1
             self.frame = self.frame + 1
             self.skip_timer -= 1

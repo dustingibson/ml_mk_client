@@ -29,10 +29,19 @@ class TorchAgent:
 
     def run_frame(self, model, p1: ActorP1, p2: ActorP2):
         # P1 Health / 166, P2 Health / 166, Distance / 255 , State / 255
-        observation_array = torch.Tensor([p1.health / 166.0, p2.health / 166.0, p1.dist(p2.x, p2.y) / 166.0, p2.state / 255.0])
+        damage_dished = p2.health - p2.prev_health
+        damage_taken = p1.health - p1.prev_health
+        health_delta = (p1.health - p2.health)
+        max_x = 765.0
+        max_y = 255.0
+        dist = p1.dist(p2.x, p2.y)
+        #observation_array = torch.Tensor([health_delta, p1.x / max_x, p1.y / max_y, p2.x / max_x, p2.y / max_y])
+        #observation_array = torch.Tensor([health_delta, p1.x, p1.y, p2.x, p2.y, p1.dist(p1.x, p2.x), p1.state, p2.state, p1.health, p2.health])
+        #observation_array = torch.Tensor([dist, p1.x, p1.y, p2.x, p2.y])
+        observation_array = torch.Tensor([p2.state, p1.x, p1.y, p2.x, p2.y])
         pred = model.forward(observation_array).detach().numpy()
         max_index = np.argmax(pred)
-        print(max_index)
+        print(self.actions[max_index].payload)
         self.recent_action = self.actions[max_index]
 
 

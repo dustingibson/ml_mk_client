@@ -10,3 +10,11 @@ Used to connect to SNES9x to be able to run capture and send control data to mod
 # Methods
 
 To be filled out
+
+# Rewards SQL that works well
+```
+UPDATE REWARDS SET Reward=0;
+UPDATE REWARDS SET Reward=1 WHERE DamageTaken > 0 and Action='block';
+UPDATE REWARDS SET Reward=1 WHERE DamageDished > 0;
+UPDATE REWARDS SET Reward=0 WHERE DamageDished > 0 and DamageTaken > 0;
+```
